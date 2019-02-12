@@ -1,0 +1,37 @@
+---
+- name: LEMP docker container deployment through ansible playbook
+  hosts: all
+  become_user: root
+  become: true
+
+  tasks:
+   - name: Run a php container
+     docker_container:
+      image: "php:fpm"
+      name: phpfpm
+      ports:
+       - "9000:9000"
+      volumes:
+       - /ansible/public:/usr/share/nginx/html
+      state: started
+
+   - name: Run nginx
+     docker_container:
+      image: "nginx"
+      name: nginximage
+      ports:
+       - "80:80"
+      links:
+       - "phpfpm:php"
+      volumes:
+       - /ansible/nginx/default:/etc/nginx/conf.d/default.conf
+      state: started
+
+   - name: Run mysql
+     docker_container:
+      name: mysql
+      image: "mariadb"
+      env:
+       MYSQL_ROOT_PASSWORD: admin
+      ports:
+       - 3306:3306
